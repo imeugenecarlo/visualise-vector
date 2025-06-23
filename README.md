@@ -24,7 +24,7 @@ WEAVIATE_API_KEY=<your-api-key>
 im not giving mine ;)
 
 4. Run the script to fetch vectors and visualise it:
-python "import requests.py"
+python "main.py"
 
 
 ## File Structure
