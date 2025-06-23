@@ -27,7 +27,7 @@ im not giving mine ;)
 python "import requests.py"
 
 
-##File Structure
+## File Structure
 - import requests.py: Main script for fetching, processing, and visualizing vectors.
 - requirements.txt: List of dependencies.
 - .gitignore: Specifies files to ignore in version control.
