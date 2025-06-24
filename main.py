@@ -37,36 +37,31 @@ def get_weaviate_session():
 # Step 1: Fetch data from Weaviate using the Python client
 def fetch_vectors():
     """
-    Fetch vectors and properties from Weaviate using the collections.get() method.
+    Fetch vectors and properties (e.g., category) from Weaviate using the collections.get() method.
     """
-    # Get Weaviate client instance
     client = get_weaviate_session()
 
     try:
-        # Retrieve the collection
         collection = client.collections.get("FAQ")  # Replace "FAQ" with your actual class name
 
-        # Iterate through the objects and extract properties and vectors
         vectors = []
-        for item in collection.iterator(include_vector=True):  # Include vectors in the iteration
-            print("Properties:", item.properties)
-            print("Vector Type:", type(item.vector))
-            print("Vector Content:", item.vector)
+        categories = []  # Store categories
+        for item in collection.iterator(include_vector=True):
+            # Extract the category property
+            category = item.properties.get("category", "Unknown")  # Replace "category" with the actual property name
+            categories.append(category)
 
-            # Handle cases where item.vector is a dictionary
+            # Extract the vector
             if isinstance(item.vector, dict):
-                # Extract the numerical vector (adjust the key as needed)
                 numerical_vector = item.vector.get("text2vecweaviate", [])
                 if not numerical_vector:
                     raise ValueError("No numerical vector found in item.vector")
                 vectors.append(numerical_vector)
             else:
-                # Append the vector directly if it's already numerical
                 vectors.append(item.vector)
 
-        return np.array(vectors)
+        return np.array(vectors), categories
     finally:
-        # Ensure the client connection is closed
         client.close()
 
 # Step 2: Reduce dimensionality to 3D using PCA
@@ -76,10 +71,15 @@ def reduce_to_3d(vectors):
     return reduced_vectors
 
 # Step 3: Visualize the 3D vectors
-def visualize_3d(vectors_3d):
+def visualize_3d(vectors_3d, titles):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     ax.scatter(vectors_3d[:, 0], vectors_3d[:, 1], vectors_3d[:, 2], c='blue', marker='o')
+
+    # Add labels for each point
+    for i, title in enumerate(titles):
+        ax.text(vectors_3d[i, 0], vectors_3d[i, 1], vectors_3d[i, 2], title, fontsize=8)
+
     ax.set_xlabel('PCA 1')
     ax.set_ylabel('PCA 2')
     ax.set_zlabel('PCA 3')
@@ -88,13 +88,13 @@ def visualize_3d(vectors_3d):
 # Main script
 if __name__ == "__main__":
     try:
-        # Fetch vectors from Weaviate
-        vectors = fetch_vectors()
+        # Fetch vectors and titles from Weaviate
+        vectors, titles = fetch_vectors()
         
         # Reduce dimensionality to 3D
         vectors_3d = reduce_to_3d(vectors)
         
-        # Visualize the reduced vectors
-        visualize_3d(vectors_3d)
+        # Visualize the reduced vectors with titles
+        visualize_3d(vectors_3d, titles)
     except Exception as e:
         print(f"Error: {e}")
